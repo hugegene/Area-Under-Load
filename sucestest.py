@@ -138,29 +138,29 @@ def calibrateframe(img, findref = False):
     vps = [[i[0], i[1]] for i in vps]
     print(vps)
     count = 0
-    while(True):
-        
-        # print count
-        if iter == 2:
-            cv2.destroyAllWindows()
-            break
-            
-        count += 1
-        cv2.namedWindow('real image')
-        cv2.setMouseCallback('real image', on_mouse, 0)
-        
-        if len(boxes) != 0:
-            for i in range(0,len(boxes), 2):
-    #            print(i)
-                try:
-                    cv2.line(img,pt1=tuple(boxes[i]),pt2=tuple(boxes[i+1]),color=(0,255,255),thickness=2)
-                   
-                except:
-                    continue
-        cv2.imshow('real image', img)
-        if cv2.waitKey(1) == 27:
-            cv2.destroyAllWindows()
-            break
+#    while(True):
+#        
+#        # print count
+#        if iter == 2:
+#            cv2.destroyAllWindows()
+#            break
+#            
+#        count += 1
+#        cv2.namedWindow('real image')
+#        cv2.setMouseCallback('real image', on_mouse, 0)
+#        
+#        if len(boxes) != 0:
+#            for i in range(0,len(boxes), 2):
+#    #            print(i)
+#                try:
+#                    cv2.line(img,pt1=tuple(boxes[i]),pt2=tuple(boxes[i+1]),color=(0,255,255),thickness=2)
+#                   
+#                except:
+#                    continue
+#        cv2.imshow('real image', img)
+#        if cv2.waitKey(1) == 27:
+#            cv2.destroyAllWindows()
+#            break
     print(vps)
     vps = sorted(vps, key=itemgetter(1)) 
     print(vps)
