@@ -71,13 +71,13 @@ def calibrateVP():
     return zVanish, xVanish, yVanish
 
 class calibratePlane():
-    def __init__(self, zVanish, xVanish, yVanish):
+    def __init__(self, zVanish):
         self.rowlines = []
         self.rowsmask = []
         self.householdshelterlength =[]
         self.dst1 = []
-        self.xVanish = xVanish
-        self.yVanish = yVanish
+        self.xVanish = []
+        self.yVanish = []
         self.zVanish =cv2.convertPointsToHomogeneous(zVanish.reshape(-1,1,2))
 
     def calibrate(self, gridsize = 3, dstimage = "data\\blkcamera.jpg", srcimage = "data\\blkplan2.jpg"):    
@@ -183,6 +183,13 @@ class calibratePlane():
         rowend1 = cv2.convertPointsToHomogeneous(rowend1) 
         rowend2 = cv2.convertPointsToHomogeneous(rowend2) 
         self.rowlines = np.cross(rowend1, rowend2)
+        
+        print("sort x y vanishing point")
+        rowintersection = np.cross(self.rowlines[0], self.rowlines[1])
+        rowintersection = cv2.convertPointsFromHomogeneous(rowintersection) 
+        self.xVanish = rowintersection
+
+
 
     def detectFallArea(self, objRefpts, im_dst):
         
@@ -307,10 +314,8 @@ if __name__ == '__main__' :
     im_dst = cv2.imread("data\\blkcamera.jpg")
     
     zVanish, xVanish, yVanish = calibrateVP()
-    print(xVanish)
-    print(yVanish)
 
-    plane1 = calibratePlane(zVanish, xVanish, yVanish)
+    plane1 = calibratePlane(zVanish)
     plane1.calibrate()
     
     refcoor = CoordinateStore(im_dst)
