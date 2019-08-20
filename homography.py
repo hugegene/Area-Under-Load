@@ -66,14 +66,18 @@ def calibrateVP():
     im_dst = cv2.imread("data\\blkcamera.jpg")
     zVanish, xVanish, yVanish = calibrateframe(im_dst)
     zVanish = np.array((int(zVanish[0]), int(zVanish[1])))
-    return zVanish
+    xVanish = np.int32(xVanish)
+    yVanish = np.int32(yVanish)
+    return zVanish, xVanish, yVanish
 
 class calibratePlane():
-    def __init__(self, zVanish):
+    def __init__(self, zVanish, xVanish, yVanish):
         self.rowlines = []
         self.rowsmask = []
         self.householdshelterlength =[]
         self.dst1 = []
+        self.xVanish = xVanish
+        self.yVanish = yVanish
         self.zVanish =cv2.convertPointsToHomogeneous(zVanish.reshape(-1,1,2))
 
     def calibrate(self, gridsize = 3, dstimage = "data\\blkcamera.jpg", srcimage = "data\\blkplan2.jpg"):    
@@ -185,76 +189,116 @@ class calibratePlane():
         start = timeit.timeit()
         print(start)
         
-        dropend1a= cv2.convertPointsToHomogeneous(np.array(objRefpts[0]).reshape(-1,1,2)) 
-#        dropline1 = np.cross(dropend1a, self.zVanish)
+        print("checking--------------")
+        print(objRefpts)
+        print(np.array(self.xVanish))
         
-        dropend2a= cv2.convertPointsToHomogeneous(np.array(objRefpts[1]).reshape(-1,1,2)) 
-#        dropline2 = np.cross(dropend2a, self.zVanish)
         
-#        dropends = cv2.convertPointsToHomogeneous(np.array([objRefpts[0], objRefpts[1]]).reshape(-1,1,2))
-#        print(dropends)
-        a = np.array([dropend1a.reshape(3,), dropend2a.reshape(3,)])
-        b = np.array([self.zVanish.reshape(3,), self.zVanish.reshape(3,)])
-        droplines = np.cross(a,b)
-        print(droplines)
-#        print(np.cross(dropends, b))
+        objRefpts = np.array(objRefpts)
+        midpts = []
+        edgeVector = []
+        for i in range(len(objRefpts)-1):    
+            midpts += [np.average(objRefpts[i:i+2], 0)]
+            edgeVector += [objRefpts[i]-objRefpts[i+1]]
+#        print(midpts)
+            
+        print("array")
+        print(np.array(edgeVector))
         
-#        print("intersections")
-        intersections= np.cross(self.rowlines, droplines)
-#        print(intersections)
-#        print(intersections.shape)
+#        for midpt in midpts:
+#            cv2.circle(im_dst,(int(midpt[0]),int(midpt[1])),3,(255,0,0),-1)
+#        cv2.imshow("image", im_dst)
+#        cv2.waitKey(0)
+#        cv2.destroyAllWindows()
+  
+        midptVector = midpts - np.array(self.xVanish)
         
-#        print("interectionsA")
-#        intersectionA= np.cross(self.rowlines, dropline1)
-#        print(intersectionA)
-#        print(intersectionA.shape)
-#        intersectionA= cv2.convertPointsFromHomogeneous(intersectionA)
-#        intersectionA = intersectionA.reshape([intersectionA.shape[0], intersectionA.shape[2]])
+        print(midptVector)
+        print(np.transpose(midptVector))
+        dot = np.dot(np.array(edgeVector), np.transpose(midptVector))
         
-#        print("altInterA")
-#        print(intersections[:,0,:])
-        intersectionA= cv2.convertPointsFromHomogeneous(intersections[:,0,:])
-        intersectionA = intersectionA.reshape([intersectionA.shape[0], intersectionA.shape[2]])
-#        print(intersections)
-        intersectionB= cv2.convertPointsFromHomogeneous(intersections[:,1,:])
-        intersectionB = intersectionB.reshape([intersectionB.shape[0], intersectionB.shape[2]])
-
-#        print("interectionsB")
-#        intersectionB= np.cross(self.rowlines, dropline2)
-#        print(intersectionB)
-#        print(intersectionB.shape)
-#        intersectionB= cv2.convertPointsFromHomogeneous(intersectionB)
-#        intersectionB = intersectionB.reshape([intersectionB.shape[0], intersectionB.shape[2]])
-
+        print(dot)
+        
+        return dot, objRefpts, self.zVanish
+        
+        
+   
      
-        accept = []
-
-        print(self.householdshelterlength)
-        for i in range(self.planegrid.shape[0]):
-            closeA = np.argmin([abs(j[0] - intersectionA[i][0]) for j in self.planegrid[i]])
-            closeB = np.argmin([abs(j[0] - intersectionB[i][0]) for j in self.planegrid[i]])
-            if closeB-closeA == self.householdshelterlength:
-                accept += [[i, closeA, closeB]]
-
-        
-        for idx, i in enumerate(accept):
-            if idx == int(len(accept)/2):
-                a= np.int32(self.planegrid[i[0]][[i[1], i[2]]])
-                print(a)
-                cv2.line(im_dst,pt1=tuple(a[0]),pt2=tuple(a[1]),color=(0,255,255),thickness=2)
-#                a= finalgrid[[rowsmask==uniquerows[i[0]]]] [[i[1], i[2]]]
-
-        end = timeit.timeit()
-        print(end)
-        diff = end-start
-        print("time take to process:")
-        print(diff)
-        while(1):
-            cv2.imshow('image', im_dst)
-            k = cv2.waitKey(1) & 0xFF
-            if k == 27:
-                break
-        cv2.destroyAllWindows()
+#        
+##        checkVanish = np.dot(np.array(objRefpts), np.array([xVanish, yVanish]))
+##        print(checkVanish)
+#        
+#        dropend1a= cv2.convertPointsToHomogeneous(np.array(objRefpts[0]).reshape(-1,1,2)) 
+##        dropline1 = np.cross(dropend1a, self.zVanish)
+#        
+#        dropend2a= cv2.convertPointsToHomogeneous(np.array(objRefpts[1]).reshape(-1,1,2)) 
+##        dropend3a= cv2.convertPointsToHomogeneous(np.array(objRefpts[2]).reshape(-1,1,2)) 
+##        dropline2 = np.cross(dropend2a, self.zVanish)
+#        
+##        dropends = cv2.convertPointsToHomogeneous(np.array([objRefpts[0], objRefpts[1]]).reshape(-1,1,2))
+##        print(dropends)
+#        a = np.array([dropend1a.reshape(3,), dropend2a.reshape(3,)])
+#        b = np.array([self.zVanish.reshape(3,), self.zVanish.reshape(3,)])
+#        droplines = np.cross(a,b)
+#        print(droplines)
+##        print(np.cross(dropends, b))
+#        
+##        print("intersections")
+#        intersections= np.cross(self.rowlines, droplines)
+##        print(intersections)
+##        print(intersections.shape)
+#        
+##        print("interectionsA")
+##        intersectionA= np.cross(self.rowlines, dropline1)
+##        print(intersectionA)
+##        print(intersectionA.shape)
+##        intersectionA= cv2.convertPointsFromHomogeneous(intersectionA)
+##        intersectionA = intersectionA.reshape([intersectionA.shape[0], intersectionA.shape[2]])
+#        
+##        print("altInterA")
+##        print(intersections[:,0,:])
+#        intersectionA= cv2.convertPointsFromHomogeneous(intersections[:,0,:])
+#        intersectionA = intersectionA.reshape([intersectionA.shape[0], intersectionA.shape[2]])
+##        print(intersections)
+#        intersectionB= cv2.convertPointsFromHomogeneous(intersections[:,1,:])
+#        intersectionB = intersectionB.reshape([intersectionB.shape[0], intersectionB.shape[2]])
+#
+##        print("interectionsB")
+##        intersectionB= np.cross(self.rowlines, dropline2)
+##        print(intersectionB)
+##        print(intersectionB.shape)
+##        intersectionB= cv2.convertPointsFromHomogeneous(intersectionB)
+##        intersectionB = intersectionB.reshape([intersectionB.shape[0], intersectionB.shape[2]])
+#
+#     
+#        accept = []
+#
+#        print(self.householdshelterlength)
+#        for i in range(self.planegrid.shape[0]):
+#            closeA = np.argmin([abs(j[0] - intersectionA[i][0]) for j in self.planegrid[i]])
+#            closeB = np.argmin([abs(j[0] - intersectionB[i][0]) for j in self.planegrid[i]])
+#            if closeB-closeA == self.householdshelterlength:
+#                accept += [[i, closeA, closeB]]
+#
+#        
+#        for idx, i in enumerate(accept):
+#            if idx == int(len(accept)/2):
+#                a= np.int32(self.planegrid[i[0]][[i[1], i[2]]])
+#                print(a)
+#                cv2.line(im_dst,pt1=tuple(a[0]),pt2=tuple(a[1]),color=(0,255,255),thickness=2)
+##                a= finalgrid[[rowsmask==uniquerows[i[0]]]] [[i[1], i[2]]]
+#
+#        end = timeit.timeit()
+#        print(end)
+#        diff = end-start
+#        print("time take to process:")
+#        print(diff)
+#        while(1):
+#            cv2.imshow('image', im_dst)
+#            k = cv2.waitKey(1) & 0xFF
+#            if k == 27:
+#                break
+#        cv2.destroyAllWindows()
         
         
 
@@ -262,9 +306,11 @@ if __name__ == '__main__' :
     
     im_dst = cv2.imread("data\\blkcamera.jpg")
     
-    zVanish = calibrateVP()
+    zVanish, xVanish, yVanish = calibrateVP()
+    print(xVanish)
+    print(yVanish)
 
-    plane1 = calibratePlane(zVanish)
+    plane1 = calibratePlane(zVanish, xVanish, yVanish)
     plane1.calibrate()
     
     refcoor = CoordinateStore(im_dst)
@@ -281,6 +327,85 @@ if __name__ == '__main__' :
             break
     cv2.destroyAllWindows()
     
-    plane1.detectFallArea(refcoor.points, im_dst)
+    dot, objRefpts, zVanish = plane1.detectFallArea(refcoor.points, im_dst)
+    
+    print(dot)
+       
+     
+        
+#        checkVanish = np.dot(np.array(objRefpts), np.array([xVanish, yVanish]))
+#        print(checkVanish)
+    
+    dropend1a= cv2.convertPointsToHomogeneous(np.array(objRefpts[0]).reshape(-1,1,2)) 
+#        dropline1 = np.cross(dropend1a, self.zVanish)
+    
+    dropend2a= cv2.convertPointsToHomogeneous(np.array(objRefpts[1]).reshape(-1,1,2)) 
+#        dropend3a= cv2.convertPointsToHomogeneous(np.array(objRefpts[2]).reshape(-1,1,2)) 
+#        dropline2 = np.cross(dropend2a, self.zVanish)
+    
+#        dropends = cv2.convertPointsToHomogeneous(np.array([objRefpts[0], objRefpts[1]]).reshape(-1,1,2))
+#        print(dropends)
+    a = np.array([dropend1a.reshape(3,), dropend2a.reshape(3,)])
+    b = np.array([self.zVanish.reshape(3,), self.zVanish.reshape(3,)])
+    droplines = np.cross(a,b)
+    print(droplines)
+#        print(np.cross(dropends, b))
+    
+#        print("intersections")
+    intersections= np.cross(self.rowlines, droplines)
+#        print(intersections)
+#        print(intersections.shape)
+    
+#        print("interectionsA")
+#        intersectionA= np.cross(self.rowlines, dropline1)
+#        print(intersectionA)
+#        print(intersectionA.shape)
+#        intersectionA= cv2.convertPointsFromHomogeneous(intersectionA)
+#        intersectionA = intersectionA.reshape([intersectionA.shape[0], intersectionA.shape[2]])
+    
+#        print("altInterA")
+#        print(intersections[:,0,:])
+    intersectionA= cv2.convertPointsFromHomogeneous(intersections[:,0,:])
+    intersectionA = intersectionA.reshape([intersectionA.shape[0], intersectionA.shape[2]])
+#        print(intersections)
+    intersectionB= cv2.convertPointsFromHomogeneous(intersections[:,1,:])
+    intersectionB = intersectionB.reshape([intersectionB.shape[0], intersectionB.shape[2]])
+
+#        print("interectionsB")
+#        intersectionB= np.cross(self.rowlines, dropline2)
+#        print(intersectionB)
+#        print(intersectionB.shape)
+#        intersectionB= cv2.convertPointsFromHomogeneous(intersectionB)
+#        intersectionB = intersectionB.reshape([intersectionB.shape[0], intersectionB.shape[2]])
+
+ 
+    accept = []
+
+    print(self.householdshelterlength)
+    for i in range(self.planegrid.shape[0]):
+        closeA = np.argmin([abs(j[0] - intersectionA[i][0]) for j in self.planegrid[i]])
+        closeB = np.argmin([abs(j[0] - intersectionB[i][0]) for j in self.planegrid[i]])
+        if closeB-closeA == self.householdshelterlength:
+            accept += [[i, closeA, closeB]]
+
+    
+    for idx, i in enumerate(accept):
+        if idx == int(len(accept)/2):
+            a= np.int32(self.planegrid[i[0]][[i[1], i[2]]])
+            print(a)
+            cv2.line(im_dst,pt1=tuple(a[0]),pt2=tuple(a[1]),color=(0,255,255),thickness=2)
+#                a= finalgrid[[rowsmask==uniquerows[i[0]]]] [[i[1], i[2]]]
+
+    end = timeit.timeit()
+    print(end)
+    diff = end-start
+    print("time take to process:")
+    print(diff)
+    while(1):
+        cv2.imshow('image', im_dst)
+        k = cv2.waitKey(1) & 0xFF
+        if k == 27:
+            break
+    cv2.destroyAllWindows()
 
 
