@@ -73,6 +73,7 @@ def calibrateVP():
 class calibratePlane():
     def __init__(self, zVanish):
         self.rowlines = []
+        self.collines = []
         self.rowsmask = []
         self.householdshelterlength =[]
         self.dst1 = []
@@ -180,15 +181,36 @@ class calibratePlane():
 
         rowend1= np.array([i[0]for i in self.planegrid])
         rowend2= np.array([i[-1]for i in self.planegrid])
+#        print(rowend2)
+#        print(rowend2.shape)
         rowend1 = cv2.convertPointsToHomogeneous(rowend1) 
         rowend2 = cv2.convertPointsToHomogeneous(rowend2) 
+        
         self.rowlines = np.cross(rowend1, rowend2)
         
         print("sort x y vanishing point")
         rowintersection = np.cross(self.rowlines[0], self.rowlines[1])
         rowintersection = cv2.convertPointsFromHomogeneous(rowintersection)
-        self.xVanish = rowintersection.reshape(rowintersection.shape[0], rowintersection.shape[2])
+        self.xVanish = rowintersection.reshape(rowintersection.shape[2],)
 
+#        [self.planegrid[:,i][0] for i in range(self.planegrid.shape[1])]
+#        print(self.planegrid)
+        colend1= np.array([self.planegrid[:,i][0] for i in range(self.planegrid.shape[1])])
+#        print("colend1")
+#        print(colend1)
+        colend2= np.array([self.planegrid[:,i][-1] for i in range(self.planegrid.shape[1])])
+#        print("colend2")
+#        print(colend2)
+#        print(colend2.shape)
+        colend1 = cv2.convertPointsToHomogeneous(colend1) 
+        colend2 = cv2.convertPointsToHomogeneous(colend2) 
+#        print("homographed")
+#        print(colend1)
+#        print(colend2)
+        self.collines = np.cross(colend1, colend2)
+        colintersection = np.cross(self.collines[0], self.collines[1])
+        colintersection = cv2.convertPointsFromHomogeneous(colintersection)
+        self.yVanish = colintersection.reshape(colintersection.shape[2],)
 
 
     def detectFallArea(self, objRefpts, im_dst):
@@ -201,18 +223,19 @@ class calibratePlane():
         print(np.array(objRefpts))
         print(self.xVanish)
         
-        np.average([(1387, 235), (1476, 220)], axis =0)
-  
-        
-        midpts = []
-        edgeVector = []
-        for i in range(len(objRefpts)-1): 
-            midpts += [np.average(objRefpts[i:i+2], axis =0)]
-            edgeVector += [np.array(objRefpts[i])- np.array(objRefpts[i+1])]
+      
+#        midpts = []
+#        edgeVector = []
+#        for i in range(len(objRefpts)-1): 
+#            midpts += [np.average(objRefpts[i:i+2], axis =0)]
+#            edgeVector += [np.array(objRefpts[i])- np.array(objRefpts[i+1])]
 #        print(midpts)
+        
+        midpts =  [np.average(objRefpts[0:2], axis =0)]
+        edgeVector = [np.array(objRefpts[0])- np.array(objRefpts[1])]
             
         print("array")
-        print(midpts)
+
         print(np.array(edgeVector))
 
 #        for midpt in midpts:
@@ -221,10 +244,12 @@ class calibratePlane():
 #        cv2.waitKey(0)
 #        cv2.destroyAllWindows()
         
-        midptVector = midpts - np.array(self.xVanish)
+        print(midpts)
+        print(np.array(self.xVanish))
         
-        print(midptVector)
-        print(midptVector.shape)
+        xVVector = midpts - np.array(self.xVanish)
+        yVVector = midpts - np.array(self.yVanish)
+        
         print(np.transpose(midptVector))
         dot = np.dot(np.array(edgeVector), np.transpose(midptVector))
         print(dot)
@@ -234,6 +259,8 @@ class calibratePlane():
         print(mag)
         
         compare = dot[np.eye(len(midptVector)) ==1]/np.array(mag)
+        
+        
         if compare[0]>compare[1]:
             align = ("x", "y")
         else:
