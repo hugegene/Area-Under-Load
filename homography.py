@@ -420,10 +420,13 @@ if __name__ == '__main__' :
     
     lines= {"x": rowlines, "y": collines}
     
-
+    print("droplines")
+    print(droplines.shape)
     
+#    droplines[1:3]
+    results = []
     print(align)
-    idx = 0
+    iid = 0
     for i in align:
         print("---------------------" +i)
         if i == "x":
@@ -432,18 +435,18 @@ if __name__ == '__main__' :
             reflines = lines["y"]
             
 #        print("intersections")
-        intersections= np.cross(reflines , droplines[idx:idx+2])
+        intersections= np.cross(reflines , droplines[iid:iid+2])
 #        print(intersections.shape)
 #        print(intersections[:,0,:].shape)
         intersectionA = cv2.convertPointsFromHomogeneous(intersections[:,0,:])
         intersectionA = np.squeeze(intersectionA)
         intersectionB = cv2.convertPointsFromHomogeneous(intersections[:,1,:])
         intersectionB = np.squeeze(intersectionB)
-        idx += 1
+        iid += 1
         
         intersectionA.shape
-        accept = []
         
+        accept = []
         print(planegrid.shape)
         
 #        colend1= np.array([self.planegrid[:,i][0] for i in range(self.planegrid.shape[1])])
@@ -455,18 +458,13 @@ if __name__ == '__main__' :
                 if closeB-closeA == householdshelterlength:
                     accept += [[[i, closeA], [i, closeB]]]
 
-        
         if i == "y":
             for i in range(planegrid.shape[1]):
                 closeA = np.argmin([abs(j[1] - intersectionA[i][1]) for j in  planegrid[:,i,:]])
                 closeB = np.argmin([abs(j[1] - intersectionB[i][1]) for j in  planegrid[:,i,:]])
                 if closeB-closeA == householdshelterlength:
                     accept += [[[closeA, i], [closeB, i]]]
-        print(accept)
-        
-        planegrid[24][94]
-        
-        
+        results += [accept]
         
         for idx, i in enumerate(accept):
             if idx == int(len(accept)/2):
@@ -474,11 +472,37 @@ if __name__ == '__main__' :
                 print(pt1)
                 pt2 = accept[idx][1]
                 print(pt2)
-#                planegrid[pt1][0][1]
+    #                planegrid[pt1][0][1]
                 print("drawing line")
                 cv2.line(im_dst,pt1=tuple(planegrid[pt1[0]][pt1[1]]),pt2=tuple(planegrid[pt2[0]][pt2[1]]),color=(0,255,255),thickness=2)
-#                a= finalgrid[[rowsmask==uniquerows[i[0]]]] [[i[1], i[2]]]
-                
+#                    a= finalgrid[[rowsmask==uniquerows[i[0]]]] [[i[1], i[2]]]
+        
+    results
+    cv2.convertPointsFromHomogeneous(results)    
+        
+    concat = np.concatenate([np.array(results[0])[:,1,:],  np.array(results[1])[:,1,:]])
+    average = np.int32(np.average(concat, 0))
+    
+    average = [[average[0]-householdshelterlength,average[1]], average, [average[0],average[1]+householdshelterlength], [average[0]-householdshelterlength,average[1]+householdshelterlength]]
+    
+    
+#    concat
+#    average
+    
+#    planegrid.shape
+    riskpts = []
+    for i in average:
+        planegrid[i[0]][i[1]-1]
+        riskpts += [planegrid[i[0]][i[1]]]
+    riskpts = np.int32(riskpts)
+#    planegrid[average[0][0]][]
+#    points = planegrid[average[0]][average[1]]
+    cv2.polylines(im_dst, [np.array(riskpts)], True, (0,255,0), thickness=3)
+
+#        print(accept)
+   
+            
+            
 #        print(intersections)
 #        print(intersections.shape)
     
