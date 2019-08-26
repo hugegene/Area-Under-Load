@@ -307,7 +307,7 @@ if __name__ == '__main__' :
     zVanish, xVanish, yVanish = calibrateVP()
 
     plane1 = calibratePlane(zVanish)
-    plane1.calibrate()
+    plane1.calibrate(gridsize = 30)
     
     refcoor = CoordinateStore(im_dst)
     cv2.namedWindow('image')
@@ -417,11 +417,48 @@ if __name__ == '__main__' :
 
     droplines = np.cross(homorefpts,b)
 #    print(droplines)
+   
+    plane1.planegrid.shape
     
+    basegrid = np.zeros([plane1.planegrid.shape[0]-1, plane1.planegrid.shape[1]-1, plane1.planegrid.shape[2]])
     
+    basegrid.shape
+    
+    plane1.planegrid.shape
     
 
-#    print(align)
+    plane1.planegrid[1:plane1.planegrid.shape[0]-1, 1:plane1.planegrid.shape[1]-1, :].shape
+    
+    plane1.planegrid[1:plane1.planegrid.shape[0]-1,1+1:plane1.planegrid.shape[1]-1 +1,:].shape
+    
+    plane1.planegrid[1-1:plane1.planegrid.shape[0]-1-1,1:plane1.planegrid.shape[1]-1,:].shape
+    
+    plane1.planegrid[1-1:plane1.planegrid.shape[0]-1-1,1+1:plane1.planegrid.shape[1]-1+1,:].shape
+    
+    
+    about = np.int32(plane1.planegrid[1:plane1.planegrid.shape[0]-1, 1:plane1.planegrid.shape[1]-1, :])
+    homopt2 = cv2.convertPointsToHomogeneous(about.reshape(-1,1,2))
+    
+
+    
+    homopt2.shape
+    about.shape
+    
+    unitvectors = droplines/np.linalg.norm(droplines, axis=1)
+
+    xv = np.dot(homopt2, np.transpose(unitvectors))
+    
+    vv = np.dot(unitvectors, np.transpose(unitvectors))
+    
+    xv/vv
+    
+    
+    
+    
+    
+    
+    
+    
     idx = 0
     for i in align:
 #        print("---------------------" +i)
