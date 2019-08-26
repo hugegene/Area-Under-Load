@@ -436,11 +436,6 @@ if __name__ == '__main__' :
     
     pt4 = plane1.planegrid[1-1:plane1.planegrid.shape[0]-1-1,1+1:plane1.planegrid.shape[1]-1+1,:]
     
-    
-    
-    
-    
-    
     pts= np.array([pt2[1][1], pt1[1][1],  pt3[1][1], pt4[1][1]], np.int32)
     
     about = np.int32(plane1.planegrid[1:plane1.planegrid.shape[0]-1, 1:plane1.planegrid.shape[1]-1, :])
