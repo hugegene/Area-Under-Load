@@ -322,10 +322,11 @@ if __name__ == '__main__' :
         if k == 27:
             break
     cv2.destroyAllWindows()
+    
     objRefpts = np.array(refcoor.points)
     lines= {"x": plane1.rowlines, "y": plane1.collines}
-    start_time = time.time()
     
+    start_time = time.time()
 #    print("checking--------------")
 #    print("objRef:" + str(refcoor.points))
 #    print("xVanishpt: " + str(plane1.xVanish))
@@ -427,35 +428,44 @@ if __name__ == '__main__' :
     plane1.planegrid.shape
     
 
-    plane1.planegrid[1:plane1.planegrid.shape[0]-1, 1:plane1.planegrid.shape[1]-1, :].shape
+    pt1 = plane1.planegrid[1:plane1.planegrid.shape[0]-1, 1:plane1.planegrid.shape[1]-1, :]
     
-    plane1.planegrid[1:plane1.planegrid.shape[0]-1,1+1:plane1.planegrid.shape[1]-1 +1,:].shape
+    pt2 = plane1.planegrid[1:plane1.planegrid.shape[0]-1,1+1:plane1.planegrid.shape[1]-1 +1,:]
     
-    plane1.planegrid[1-1:plane1.planegrid.shape[0]-1-1,1:plane1.planegrid.shape[1]-1,:].shape
+    pt3 = plane1.planegrid[1-1:plane1.planegrid.shape[0]-1-1,1:plane1.planegrid.shape[1]-1,:]
     
-    plane1.planegrid[1-1:plane1.planegrid.shape[0]-1-1,1+1:plane1.planegrid.shape[1]-1+1,:].shape
+    pt4 = plane1.planegrid[1-1:plane1.planegrid.shape[0]-1-1,1+1:plane1.planegrid.shape[1]-1+1,:]
     
+    
+    
+    
+    
+    
+    pts= np.array([pt2[1][1], pt1[1][1],  pt3[1][1], pt4[1][1]], np.int32)
     
     about = np.int32(plane1.planegrid[1:plane1.planegrid.shape[0]-1, 1:plane1.planegrid.shape[1]-1, :])
     homopt2 = cv2.convertPointsToHomogeneous(about.reshape(-1,1,2))
     
 
-    
     homopt2.shape
     about.shape
     
-    unitvectors = droplines/np.linalg.norm(droplines, axis=1)
+    unitvectors = droplines[0]/np.linalg.norm(droplines[0])
 
     xv = np.dot(homopt2, np.transpose(unitvectors))
     
     vv = np.dot(unitvectors, np.transpose(unitvectors))
     
-    xv/vv
+    d = xv/vv
+    
+    d.shape
+    
+    cv2.polylines(im_dst, [pts], True, (0,255,0), thickness=3)
     
     
-    
-    
-    
+    cv2.imshow("image", im_dst)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
     
     
     
@@ -499,8 +509,6 @@ if __name__ == '__main__' :
                 if closeB-closeA == plane1.householdshelterlength:
                     accept += [[[closeA, i], [closeB, i]]]
 #        print(accept)
-        
-
         
         
         for idx, i in enumerate(accept):
