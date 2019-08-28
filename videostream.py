@@ -13,7 +13,7 @@ import time
 import cv2
 
 ap = argparse.ArgumentParser()
-ap.add_argument("-v", "--video", default="data\demo.avi", type=str,
+ap.add_argument("-v", "--video", default="data\\test2.mp4", type=str,
 	help="path to input video file")
 ap.add_argument("-t", "--tracker", type=str, default="csrt",
 	help="OpenCV object tracker type")
@@ -76,7 +76,7 @@ while True:
         break
 	# resize the frame (so we can process it faster) and grab the
 	# frame dimensions
-    frame = imutils.resize(frame, width=1000)
+#    frame = imutils.resize(frame, width=1000)
     (H, W) = frame.shape[:2]
 	
 	# check to see if we are currently tracking an object
@@ -88,6 +88,7 @@ while True:
         if success:
             (x, y, w, h) = [int(v) for v in box]
             cv2.rectangle(frame, (x, y), (x + w, y + h),(0, 255, 0), 2)
+            load= frame[y:y+h,x:x+w,:]
            
 		# update the FPS counter
         fps.update()
@@ -142,5 +143,8 @@ else:
 # close all windows
 cv2.destroyAllWindows()
 
-
+#crop.shape
+#cv2.imshow("image", crop)
+#cv2.waitKey(0)
+#cv2.destroyAllWindows()
 
