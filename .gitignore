@@ -2,3 +2,5 @@
 *.pyc
 test.py
 /.vscode
+pose.pth
+poseparameters.pth

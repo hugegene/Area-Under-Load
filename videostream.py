@@ -33,7 +33,7 @@ def cornerdetection(load):
     inp = data_transform(load)
     inp = inp.view([1, 3, 400, 400])
  
-    out = net(inp)[0].data.numpy().reshape(4, 50, 50)
+    out = net(inp)[0].data.cpu().numpy().reshape(4, 50, 50)
     
 #    predictedcoor = []
     globalcoor =[]
@@ -99,7 +99,7 @@ if __name__ == '__main__' :
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     net = DopeNetwork(pretrained=False).to(device)
     net = torch.nn.DataParallel(net).to(device)
-    net.load_state_dict(torch.load("C:\\Users\\bdgecyt\\Desktop\\poseparameters.pth", map_location=torch.device('cpu')))
+    net.load_state_dict(torch.load("poseparameters.pth", map_location=torch.device('cuda:0')))
     
     # extract the OpenCV version info
     (major, minor) = cv2.__version__.split(".")[:2]

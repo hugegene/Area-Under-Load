@@ -5,11 +5,11 @@ Created on Wed Aug 28 14:24:58 2019
 @author: bdgecyt
 """
 
-from sklearn.metrics import roc_curve, auc
-from sklearn.metrics import confusion_matrix
+#from sklearn.metrics import roc_curve, auc
+#from sklearn.metrics import confusion_matrix
 from pathlib import Path
 import numpy as np
-import pandas as pd
+#import pandas as pd
 import json
 import os
 import matplotlib.pyplot as plt
@@ -265,7 +265,7 @@ if __name__ == '__main__' :
     net = DopeNetwork(pretrained=False).to(device)
     net = torch.nn.DataParallel(net).to(device)
     print(net)
-    net.load_state_dict(torch.load("C:\\Users\\bdgecyt\\Desktop\\poseparameters.pth", map_location=torch.device('cpu')))
+    net.load_state_dict(torch.load("poseparameters.pth", map_location=torch.device('cpu')))
     
     load = image_resize(load, width = 400)
     resize = load.shape
