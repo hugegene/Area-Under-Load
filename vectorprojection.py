@@ -79,10 +79,13 @@ class calibratePlane():
         self.dst1 = []
         self.xVanish = []
         self.yVanish = []
-        self.zVanish =np.squeeze(cv2.convertPointsToHomogeneous(zVanish.reshape(-1,1,2)))
+        self.zVanish =zVanish
 
-    def calibrate(self, gridsize = 3, dstimage = "data\\blkcamera.jpg", srcimage = "data\\blkplan2.jpg"):    
-        im_dst = cv2.imread(dstimage)
+    def calibrate(self, gridsize = 3, dstimage = "data\\blkcamera.jpg", srcimage = "data\\blkplan2.jpg", srcpts =[], dstpts = []):    
+        if dstimage == "data\\blkcamera.jpg":
+            im_dst = cv2.imread(dstimage)
+        else:
+            im_dst = dstimage
         #draw building plane   
         im_src = cv2.imread(srcimage)
     
@@ -106,10 +109,18 @@ class calibratePlane():
         cols = np.arange(0, im_src.shape[1], gridsize)
         points = [[i, j] for j in rows for i in cols]
 #        print(len(points))
-    
-        housholdshelter = [[1146, 345], [1203, 395]]
-        self.householdshelterlength = np.argmin(abs(cols -housholdshelter[1][0]))-np.argmin(abs(cols -housholdshelter[0][0]))
-        self.householdshelterwidth = np.argmin(abs(rows -housholdshelter[1][1]))-np.argmin(abs(rows -housholdshelter[0][1]))
+        for pt in points:
+            cv2.circle(im_src,(int(pt[0]),int(pt[1])),3,(255,255,0),-1)
+        
+        cv2.imshow("IIImage", im_src)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()   
+            
+#        housholdshelter = [[1146, 346] ,[1201, 395]]
+        housholdshelter = [[599, 365], [635, 399]]
+        self.householdshelterwidth = np.argmin(abs(cols -housholdshelter[1][0]))-np.argmin(abs(cols -housholdshelter[0][0]))
+        self.householdshelterlength = np.argmin(abs(rows -housholdshelter[1][1]))-np.argmin(abs(rows -housholdshelter[0][1]))
+        
         
         bound = [polycoor.rectpts[0], [polycoor.rectpts[0][0], polycoor.rectpts[1][1]], 
         polycoor.rectpts[1], [polycoor.rectpts[1][0], polycoor.rectpts[0][1]]]
@@ -125,28 +136,33 @@ class calibratePlane():
         plt.scatter([i[0] for i in insidepts], [i[1] for i in insidepts], color = 'blue')
         plt.show()
         
-        coordinateStore1 = CoordinateStore(im_src)
-        cv2.namedWindow('image')
-        cv2.setMouseCallback('image',coordinateStore1.select_point)
-        
-        while(1):
-            cv2.imshow('image',im_src)
-            k = cv2.waitKey(1) & 0xFF
-            if k == 27:
-                break
-        cv2.destroyAllWindows()
-        
-        coordinateStore2 = CoordinateStore(im_dst)
-        cv2.namedWindow('image')
-        cv2.setMouseCallback('image',coordinateStore2.select_point)
-        
-        while(1):
-            cv2.imshow('image', im_dst)
-            k = cv2.waitKey(1) & 0xFF
-            if k == 27:
-                break
-        cv2.destroyAllWindows()
-        
+        if srcpts == []:
+            coordinateStore1 = CoordinateStore(im_src)
+            cv2.namedWindow('image')
+            cv2.setMouseCallback('image',coordinateStore1.select_point)
+            
+            while(1):
+                cv2.imshow('image',im_src)
+                k = cv2.waitKey(1) & 0xFF
+                if k == 27:
+                    break
+            cv2.destroyAllWindows()
+            
+            coordinateStore2 = CoordinateStore(im_dst)
+            cv2.namedWindow('image')
+            cv2.setMouseCallback('image',coordinateStore2.select_point)
+            
+            while(1):
+                cv2.imshow('image', im_dst)
+                k = cv2.waitKey(1) & 0xFF
+                if k == 27:
+                    break
+            cv2.destroyAllWindows()
+        else:
+            coordinateStore1 = CoordinateStore(im_src)
+            coordinateStore1.points = srcpts
+            coordinateStore2 = CoordinateStore(im_src)
+            coordinateStore2.points = dstpts
         # Calculate Homography
         h, status = cv2.findHomography(np.array(coordinateStore1.points), np.array(coordinateStore2.points))
         # Warp source image to destination based on homography
@@ -168,7 +184,8 @@ class calibratePlane():
         
         
         for i in self.dst1:
-            cv2.circle(im_dst,(int(i[0]),int(i[1])),3,(255,0,0),-1)
+            cv2.circle(im_dst,(int(i[0]),int(i[1])),3,(255,255,0),-1)
+            
         cv2.imshow("image", im_dst)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
@@ -211,7 +228,7 @@ class calibratePlane():
 
     def detectFallArea(self, objRefpts, im_dst):
         
-        b =np.int64(np.repeat([zVanish], len(objRefpts), axis =0))
+        b =np.int64(np.repeat([self.zVanish], len(objRefpts), axis =0))
         droplines = b-objRefpts
     
         l= self.householdshelterlength
@@ -235,8 +252,10 @@ class calibratePlane():
             return np.array(c)
         
         dl = perpendicular(droplines)
+        
+#        np.array([pt1.reshape((-1, pt1.shape[2])), pt2.reshape((-1, pt2.shape[2])), pt3.reshape((-1, pt3.shape[2]))])
  
-        x = np.array([pt1.reshape((-1, pt1.shape[2])), pt2.reshape((-1, pt2.shape[2]))])-objRefpts[0:2].reshape([2,1,2])
+        x = np.array([pt1.reshape((-1, pt1.shape[2])), pt2.reshape((-1, pt2.shape[2])), pt3.reshape((-1, pt3.shape[2]))]) -objRefpts[0:3].reshape([3,1,2])
     #    pt2
     #    pt2.reshape((-1, pt2.shape[2])).shape
 #        x = pt1.reshape((-1, pt1.shape[2]))- objRefpts[0]
@@ -244,14 +263,16 @@ class calibratePlane():
 #        x = np.array([x,x2])
 #        x.shape
     #    x2 = pt2.reshape((-1, pt2.shape[2]))- objRefpts[1]
-        xv = np.dot(x, np.transpose(dl[0:2]))
-        vv = np.linalg.norm(dl[0:2], axis =1)
+        xv = np.dot(x, np.transpose(dl[0:3]))
+        vv = np.linalg.norm(dl[0:3], axis =1)
 
-        d = xv/vv.reshape([2,1,1])
+        d = xv/vv.reshape([3,1,1])
+#        print(d)
         
         shortestdist1= abs(d[0,:,0]).reshape([pt1.shape[0], pt1.shape[1]])
         shortestdist2= abs(d[1,:,1]).reshape([pt2.shape[0], pt2.shape[1]])
-        shortestdist =  shortestdist1+  shortestdist2
+        shortestdist3= abs(d[2,:,2]).reshape([pt3.shape[0], pt3.shape[1]])
+        shortestdist =  shortestdist1 +  shortestdist2 + shortestdist3
         shortestdist.shape
         shortestpoint = np.unravel_index(shortestdist.argmin(), shortestdist.shape)
 
@@ -272,20 +293,27 @@ class calibratePlane():
     #    pts= np.array([pt2[1][1], pt1[1][1],  pt3[1][1], pt4[1][1]], np.int32)
     #    cv2.polylines(im_dst, [pts], True, (0,255,0), thickness=3)
         
-        cv2.imshow("image", im_dst)
-        cv2.waitKey(0)
-        cv2.destroyAllWindows()
-
+        area = np.array([tuple(np.int32(pt1[shortestpoint[0]][shortestpoint[1]])), 
+         tuple(np.int32(pt2[shortestpoint[0]][shortestpoint[1]])),
+         tuple(np.int32(pt3[shortestpoint[0]][shortestpoint[1]])),
+         tuple(np.int32(pt4[shortestpoint[0]][shortestpoint[1]]))])
+            
+#        cv2.imshow("image", im_dst)
+#        cv2.waitKey(0)
+#        cv2.destroyAllWindows()
         
+        return area
 
 if __name__ == '__main__' :
     
     im_dst = cv2.imread("data\\blkcamera.jpg")
     
     zVanish, xVanish, yVanish = calibrateVP()
+#    print(zVanish)
+#    print(plane1.zVanish)
 
     plane1 = calibratePlane(zVanish)
-    plane1.calibrate(gridsize = 2)
+    plane1.calibrate(gridsize = 15, dstimage = im_dst)
     
     refcoor = CoordinateStore(im_dst)
     cv2.namedWindow('image')
@@ -302,7 +330,10 @@ if __name__ == '__main__' :
     cv2.destroyAllWindows()
 #    objRefpts = np.array(refcoor.points, np.int64)
     plane1.detectFallArea(np.array(refcoor.points, np.int64), im_dst)
-    
+
+
+#    plane1.householdshelterlength
+#    plane1.householdshelterwidth
     
 #    objRefpts.dtype
 #    plane1.planegrid.shape

@@ -42,6 +42,9 @@ import time
 import os
 import copy
 import cv2
+from functools import reduce
+import operator
+import math
 
 class DopeNetwork(nn.Module):
     def __init__(
@@ -265,13 +268,16 @@ if __name__ == '__main__' :
     net.load_state_dict(torch.load("C:\\Users\\bdgecyt\\Desktop\\poseparameters.pth", map_location=torch.device('cpu')))
     
     load = image_resize(load, width = 400)
+    resize = load.shape
     load = padding(load)
     load = load[:400,:400,:]
-    inp = torch.tensor(load).float()
+    
+    
+    data_transform = transforms.Compose([transforms.ToTensor()])
+    
+    inp = data_transform(load)
     inp = inp.view([1, 3, 400, 400])
  
-    load.shape
-    
     out = net(inp)[0].data.numpy().reshape(4, 50, 50)
     
     predictedcoor = []
@@ -283,11 +289,15 @@ if __name__ == '__main__' :
         print(argmax)
         predictedcoor += [argmax]
     
+    glo
+    center = tuple(map(operator.truediv, reduce(lambda x, y: map(operator.add, x, y), glo), [len(glo)] * 2))
+    coords = sorted(glo, key=lambda coord: (200 - math.degrees(math.atan2(*tuple(map(operator.sub, coord, center))[::-1]))) % 360)
+    
     for i in predictedcoor:
          print(i[0], i[1])
 #        print(i[0]*400, i[1]*400)
 #        print(i[1]*400)
-         cv2.circle(load, tuple([int(i[1]*400), int(i[0]*400)]) ,3,(255,0,0),-1)
+         cv2.circle(load, tuple([int(i[1]*resize[1]), int(i[0]*resize[0])]) ,3,(255,0,0),-1)
         
     cv2.imshow("image", load)
     cv2.waitKey(0)
